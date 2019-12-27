@@ -45,8 +45,8 @@ struct PARAM {
 struct CMD {
   char addr;
   unsigned int cmdNum;
-  static const unsigned int MAX_PARAMS = 10;
-  static const unsigned int MAX_FLAGS = 10;
+  static const unsigned int MAX_PARAMS = 5;
+  static const unsigned int MAX_FLAGS = 5;
   unsigned int numParams;
   unsigned int numFlags;
   PARAM params[MAX_PARAMS];

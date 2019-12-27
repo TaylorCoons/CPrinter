@@ -11,8 +11,6 @@
 class Parser {
   /* Variables */
   private:
-  
-  public:
 
   /* Methods */
   private:
