@@ -1,6 +1,7 @@
 #ifndef Control_h
 #define Control_h
 
+#include <Arduino.h>
 #include <Wire.h>
 
 #include "Cmds.h"
@@ -17,11 +18,15 @@ class Control {
   static const unsigned int MAX_CMDS = 5;
   CMD cmds[MAX_CMDS];
   int cmdIndex = 0;
-  //COMM::PACKET stagedPacket;
+  INST stagedPacket;
   
   /* Methods */
   private:
-  //COMM::PACKET Interpret(CMD cmd);
+  INST Interpret(CMD cmd);
+
+  void Write(unsigned int x);
+  void Write(unsigned long int x);
+  void Write(double x);
     
   public:
   Control();

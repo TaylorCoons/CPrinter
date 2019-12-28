@@ -1,5 +1,6 @@
 #include "Parser.h"
 #include "Control.h"
+#include "Comm.h"
 
 /*
  * 3D Printer OG Processor
@@ -9,15 +10,12 @@
 Parser parser;
 Control control;
 
-enum TEST {
-  NONE,
-  ONE,
-  TWO
-};
-
 void setup() {
   Serial.begin(9600);
+  pinMode(13, OUTPUT);
 }
+
+double temp = 10;
 
 void loop() {
   while (Serial.available() > 0) {
@@ -33,8 +31,10 @@ void loop() {
       Serial.print(" : ");
       Serial.println(cmd.params[i].value);
     }
-    delay(5000);
     control.Queue(cmd);
-    control.Dispatch();
+    digitalWrite(13, HIGH);
+    delay(500);
+    digitalWrite(13, LOW);
+    control.Dispatch(); 
   }
 }
