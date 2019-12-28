@@ -2,28 +2,28 @@
 
 Control::Control() {
   Wire.begin();
+  // Slow the clock down for less noisy signal
   Wire.setClock(10000);
 }
 
-INST Control::Interpret(CMD cmd) {
-  INST inst;
+void Control::Interpret(CMD cmd) {
+  xAxisInst.Clear();
+  yAxisInst.Clear();
   if (cmd.addr == 'G') {
     switch(cmd.cmdNum) {
-      case 0:
-        inst.opt = OPT::MOVE;
-        inst.flags = 0;
-        inst.flags |= OPT_FLAG::NONE;
-        Serial.print("cmd.params[2].value: ");
-        Serial.println(cmd.params[2].value);
-        inst.value = cmd.params[2].value;
-        inst.steps = 0;
-      break;
+      case 0: // G0 and G1 are mostly the same
       case 1:
-        inst.opt = OPT::MOVE;
-        inst.flags = 0;
-        inst.flags |= OPT_FLAG::NONE;
-        inst.value = cmd.params[2].value;
-        inst.steps = 0;
+        if (cmd.params[2].set) {
+          xAxisInst.opt = OPT::MOVE;
+          xAxisInst.flags = static_cast<unsigned int>(OPT_FLAG::NONE);
+          xAxisInst.value = cmd.params[2].value;
+        }
+        if (cmd.params[3].set) {
+          yAxisInst.opt = OPT::MOVE;
+          yAxisInst.flags = static_cast<unsigned int>(OPT_FLAG::NONE);
+          yAxisInst.value = cmd.params[3].value;
+        }
+        xAxisInst.steps = yAxisInst.steps = CalcMaxSteps(xAxisInst.value, yAxisInst.value, 0);
       break;
     }
   }
@@ -32,7 +32,6 @@ INST Control::Interpret(CMD cmd) {
       
     }
   }
-  return inst;
 }
 
 void Control::Queue(CMD cmd) {
@@ -59,17 +58,32 @@ void Control::Write(double x) {
   Write(y);
 }
 
+void Control::SendInst(uint8_t addr, INST inst) {
+  Wire.beginTransmission(addr);
+  Write(static_cast<unsigned int>(inst.opt));
+  Write(static_cast<unsigned int>(inst.flags));
+  Write(inst.value);
+  Write(static_cast<unsigned int>(inst.steps));
+  Wire.endTransmission();
+}
+
+unsigned int Control::CalcMaxSteps(double xDist, double yDist, double zDist) {
+  // Ignore z since idc about it now
+  unsigned int xSteps = xDist * X_AXIS_STEPS_PER_MM;
+  unsigned int ySteps = yDist * Y_AXIS_STEPS_PER_MM;
+  return (xSteps > ySteps ? xSteps : ySteps);
+}
+
 void Control::Dispatch() {
   if (cmdIndex >= 0) {
-    INST inst = Interpret(cmds[cmdIndex]);
-    Serial.print("inst.value: ");
-    Serial.println(inst.value);
-    Wire.beginTransmission(8);
-    Write(static_cast<unsigned int>(inst.opt));
-    Write(static_cast<unsigned int>(inst.flags));
-    Write(inst.value);
-    Write(static_cast<unsigned int>(inst.steps));
-    Wire.endTransmission();
+    // Interpret commands for each subsystem
+    Interpret(cmds[cmdIndex]);
+    xAxisInst.Print("X Axis");
+    yAxisInst.Print("Y Axis");
+    // Start dispatching instruction for each subsystem
+    SendInst(X_AXIS_ADDR, xAxisInst);
+    SendInst(Y_AXIS_ADDR, yAxisInst);
+    // Decrement buffer
     cmdIndex--;
   }
 }
