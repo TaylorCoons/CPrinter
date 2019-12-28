@@ -35,10 +35,7 @@ void Control::Interpret(CMD cmd) {
 }
 
 void Control::Queue(CMD cmd) {
-  if (cmdIndex < MAX_CMDS - 1) {
-    cmdIndex++;
-    cmds[cmdIndex] = cmd;
-  }
+  cmds.Push(cmd);
 }
 
 void Control::Write(unsigned int x) {
@@ -75,17 +72,12 @@ unsigned int Control::CalcMaxSteps(double xDist, double yDist, double zDist) {
 }
 
 void Control::Dispatch() {
-  if (cmdIndex >= 0) {
-    // Interpret commands for each subsystem
-    Interpret(cmds[cmdIndex]);
-    xAxisInst.Print("X Axis");
-    yAxisInst.Print("Y Axis");
-    // Start dispatching instruction for each subsystem
-    SendInst(X_AXIS_ADDR, xAxisInst);
-    SendInst(Y_AXIS_ADDR, yAxisInst);
-    // Decrement buffer
-    cmdIndex--;
-  }
+  CMD cmd = cmds.Pop();
+  Interpret(cmd);
+  xAxisInst.Print("X Axis");
+  yAxisInst.Print("Y Axis");
+  SendInst(Y_AXIS_ADDR, yAxisInst);
+  SendInst(X_AXIS_ADDR, xAxisInst);
 }
 
 Control::~Control() {

@@ -25,9 +25,9 @@ void loop() {
     if (buff == "step\n") {
       for (unsigned int i = 0; i < 100; i++) {
         digitalWrite(STEP_PIN, HIGH);
-        delay(10);
+        delay(20);
         digitalWrite(STEP_PIN, LOW);
-        delay(10);
+        delay(20);
       }
       break;
     }
@@ -45,9 +45,8 @@ void loop() {
     }
   }
   */
-  
   CMD cmd('G', 0);
-  cmd.params[2].Set(5.0);
+  cmd.params[2].Set(50.0);
   cmd.params[3].Set(10.0);
   control.Queue(cmd);
   digitalWrite(13, HIGH);
@@ -55,11 +54,11 @@ void loop() {
   digitalWrite(13, LOW);
   control.Dispatch(); 
   delay(5000);
-  for (unsigned int i = 0; i < 20; i++) {
+  for (unsigned int i = 0; i < 99; i++) {
     digitalWrite(STEP_PIN, HIGH);
-    delay(2000);
+    delay(20);
     digitalWrite(STEP_PIN, LOW);
-    delay(2000);
+    delay(20);
   }
   delay(5000);
   

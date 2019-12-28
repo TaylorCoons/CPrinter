@@ -5,21 +5,20 @@
 #include <Wire.h>
 
 #include "Cmds.h"
-#include "Comm.h"
+#include "INST.h"
 #include "SlaveAddr.h"
+#include "QBuffer.h"
 #include "AxisDefines.h"
 
 /*
  * Class to provide logical control from g-code command
  */
-
 class Control {
 
   /* Variables */
   private:
-  static const unsigned int MAX_CMDS = 5;
-  CMD cmds[MAX_CMDS];
-  int cmdIndex = 0;
+  // TODO: Remove
+  QBuffer<CMD> cmds;
   INST xAxisInst;
   INST yAxisInst;
   
