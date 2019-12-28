@@ -1,5 +1,5 @@
-#ifndef Comm_h
-#define Comm_h
+#ifndef INST_h
+#define INST_h
 
 /*
    Packet structures for sending data across mcus

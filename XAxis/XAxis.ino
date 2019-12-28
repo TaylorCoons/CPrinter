@@ -1,6 +1,6 @@
 #include <Wire.h>
 
-#include "Comm.h"
+#include "INST.h"
 #include "SlaveAddr.h"
 #include "AxisDefines.h"
 

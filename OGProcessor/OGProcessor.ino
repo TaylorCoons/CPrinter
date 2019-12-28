@@ -1,6 +1,6 @@
 #include "Parser.h"
 #include "Control.h"
-#include "Comm.h"
+#include "INST.h"
 
 /*
  * 3D Printer OG Processor
