@@ -8,22 +8,25 @@ template<typename T>
 class QBuffer {
   /* Variables */
   private:
-  static const unsigned int QUEUE_SIZE = 10;
+  static const int QUEUE_SIZE = 10;
   T queue[QUEUE_SIZE];
-  int queueIndex = 0;
+  int queueIndex = -1;
   bool error;
 
   /* Methods */
   public:
   QBuffer() {
-    queueIndex = 0;
+    queueIndex = -1;
   }
 
   // Pushes element to queue and sets error flag if full
   void Push(T element) {
     if (!Full()) {
+      for (int i = queueIndex + 1; i > 0; i--) {
+        queue[i] = queue[i - 1];
+      }
       queueIndex++;
-      queue[queueIndex] = element;
+      queue[0] = element;
     } else {
       error = true;
     }

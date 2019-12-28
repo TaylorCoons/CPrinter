@@ -22,16 +22,17 @@ void loop() {
   while (Serial.available() > 0) {
     String buff = Serial.readString();
     if (buff == "exec\n") {
+      control.Dispatch();
+      delay(1000);
       control.Execute();
       break;
     }
     CMD cmd = parser.Parse(buff);
-    control.Queue(cmd);
-    control.Dispatch();
     if (cmd.addr == '\0') {
       Serial.println("Invalid");
       continue;
     }
+    control.Queue(cmd);
     for (unsigned int i = 0; i < cmd.numParams; i++) {
       Serial.print(cmd.params[i].param);
       Serial.print(" : ");

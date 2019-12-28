@@ -45,6 +45,8 @@ void Control::Interpret(CMD cmd) {
 
 void Control::Queue(CMD cmd) {
   cmds.Push(cmd);
+  Serial.print("Cmds Queued: ");
+  Serial.println(cmds.Size());
 }
 
 void Control::Write(unsigned int x) {
