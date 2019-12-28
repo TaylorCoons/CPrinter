@@ -4,31 +4,30 @@
 /*
    Packet structures for sending data across mcus
 */
+// Enum to define the operations
 enum OPT {
   NOOP,
   MOVE,
   HOME
 };
 
+// Enum to define specified flags
 enum OPT_FLAG {
   NONE
 };
 
+// Structure to hold instruction packet to be sent from OGProcessor
 struct INST {
+  // OPT: operator
   OPT opt;
+  // FLAG: instruction flags
   unsigned int flags;
+  // VALUE: value associated with instruction (if any)
   double value;
+  // STEPS: steps associated with instruction (if any)
   unsigned int steps;
-  
-  INST& operator=(const INST& other) {
-    if (this != &other) {
-      this->opt = other.opt;
-      this->flags = other.flags;
-      this->value = other.value;
-      this->steps = other.steps;
-    }
-  }
-  
+
+  // Helper to clear structure
   void Clear() {
     opt = NOOP;
     flags = 0;
@@ -36,6 +35,7 @@ struct INST {
     steps = 0;
   }
 
+  // Helper to print structure for debug
   void Print(String instName) {
     Serial.print("<");
     Serial.print(instName);

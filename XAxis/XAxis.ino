@@ -4,33 +4,47 @@
 #include "SlaveAddr.h"
 #include "AxisDefines.h"
 
+// Stepper driver pins
 const unsigned int DIR_PIN = 4;
 const unsigned int STEP_PIN = 5;
 
+// Step the stepper motor once
 void Step();
 
+// Set the direction of the stepper motor
 void Direction(bool);
 
+// Callback for I2C data
 void onRecv(int numBytes);
 
 void setup() {
   // put your setup code here, to run once:
+  // Set the stepper driver pins
   pinMode(DIR_PIN, OUTPUT);
   pinMode(STEP_PIN, OUTPUT);
+  // Just write no action to pins
   digitalWrite(DIR_PIN, LOW);
   digitalWrite(STEP_PIN, LOW);
-  pinMode(13, OUTPUT);
+  // Initialize the serial for debug
   Serial.begin(9600);
+  // Initialize I2C to receive data from OGProcessor
   Wire.begin(X_AXIS_ADDR);
+  // Set I2C callback
   Wire.onReceive(onRecv);
+  // Attach interrupt on the step pin driven by OGProcessor
   attachInterrupt(digitalPinToInterrupt(2), StepAction, RISING);
 }
 
-bool clockwise = false;
+
+// Instruction queue size
 const int MAX_INST = 10;
+// Instruction queue index
 int instIndex = -1;
+// Instruction queue
 INST instQueue[MAX_INST];
+// Step index (incremented every step signal from OGProcessor)
 unsigned int stepIndex = 0;
+// Step count (incremented only when axis actually steps the motor)
 unsigned int stepCount = 0;
 
 // DEBUG:
@@ -77,33 +91,40 @@ void StepAction() {
   Direction(clockwise);
   // Do linear interpolation to determine wether to step or not
   unsigned int totalSteps = inst.value * X_AXIS_STEPS_PER_MM;
+  unsigned int stepsRequired = map(stepIndex, 0, inst.steps, 0, totalSteps);
   Serial.print("totalSteps: ");
   Serial.println(totalSteps);
-  unsigned int stepsRequired = map(stepIndex, 0, inst.steps, 0, totalSteps);
   Serial.print("stepsRequired: ");
   Serial.println(stepsRequired);
   Serial.print("stepCount: ");
   Serial.println(stepCount);
+  // Check if we need to step based on the linear interpolation
   if (stepCount < stepsRequired) {
-    digitalWrite(13, HIGH);
+    // If so step
     Step();
     stepCount++;
-    digitalWrite(13, LOW);
   } 
 }
 
+// Step the stepper motor once
 void Step() {
+  // Just toggle pin to trigger driver interrupt
   digitalWrite(STEP_PIN, HIGH);
   digitalWrite(STEP_PIN, LOW);
 }
 
+
+// Set the direction of the stepper motor
 void Direction(bool clockwise) {
   digitalWrite(DIR_PIN, clockwise);
 }
 
+// Callback for I2C data
 void onRecv(int numBytes) {
   INST inst;
+  // Check that the data recieved is of the right size
   if (numBytes == 10) {
+    // Cast all of the bytes to the correct type
     byte c;
     unsigned int x;
     unsigned long int y;
@@ -121,6 +142,7 @@ void onRecv(int numBytes) {
     x = static_cast<unsigned int>(Wire.read()) << 8;
     x |= static_cast<unsigned int>(Wire.read());
     inst.steps = x;
+    // If our queue is not full store
     if (instIndex < MAX_INST - 1) {
       instIndex++;
       instQueue[instIndex] = inst;
