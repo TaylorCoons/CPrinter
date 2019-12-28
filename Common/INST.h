@@ -13,7 +13,8 @@ enum OPT {
 
 // Enum to define specified flags
 enum OPT_FLAG {
-  NONE
+  NONE = 0, // No flags
+  DRIVE = 2 // Specifies the axis is to be driven by step signal
 };
 
 // Structure to hold instruction packet to be sent from OGProcessor

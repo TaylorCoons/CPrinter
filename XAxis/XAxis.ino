@@ -18,6 +18,13 @@ void Direction(bool);
 // Callback for I2C data
 void onRecv(int numBytes);
 
+// Instruction buffer
+INST inst;
+// Step index (incremented every step signal from OGProcessor)
+unsigned int stepIndex = 0;
+// Step count (incremented only when axis actually steps the motor)
+unsigned int stepCount = 0;
+
 void setup() {
   // put your setup code here, to run once:
   // Set the stepper driver pins
@@ -38,27 +45,17 @@ void setup() {
   pinMode(13, OUTPUT);
 }
 
-
-// Create a queue for the incoming instructions
-QBuffer<INST> instQueue;
-// Step index (incremented every step signal from OGProcessor)
-unsigned int stepIndex = 0;
-// Step count (incremented only when axis actually steps the motor)
-unsigned int stepCount = 0;
-
 void loop() {
-  digitalWrite(13, instQueue.ErrorStatus());
+  digitalWrite(13, inst.opt != OPT::NOOP);
 }
 
 void StepAction() {
   // Debug flag
   bool debugPrint = false;
   // Check to see if theres no instruction
-  if (instQueue.Empty()) {
+  if (inst.opt == OPT::NOOP) {
     return;
   }
-  // Grab the current instruction
-  INST inst = instQueue.Peek();
   // Increment the step index
   stepIndex++; 
   if (debugPrint) {
@@ -75,8 +72,8 @@ void StepAction() {
     // Reset counters
     stepCount = 0;
     stepIndex = 0;
-    // Pop current instruction
-    instQueue.Pop();
+    // Clear instruction
+    inst.Clear();
     return;
   }
   // Check sign to see which direction
@@ -119,7 +116,6 @@ void Direction(bool clockwise) {
 
 // Callback for I2C data
 void onRecv(int numBytes) {
-  INST inst;
   // Check that the data recieved is of the right size
   if (numBytes == 10) {
     // Cast all of the bytes to the correct type
@@ -140,7 +136,5 @@ void onRecv(int numBytes) {
     x = static_cast<unsigned int>(Wire.read()) << 8;
     x |= static_cast<unsigned int>(Wire.read());
     inst.steps = x;
-    // If our queue is not full store
-    instQueue.Push(inst);
   }
 }

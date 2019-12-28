@@ -7,7 +7,7 @@
  * Responsible for: Interfacing with g-code source, parsing the g-code, sending the commands to appropriate slaves
  */
 
-const unsigned int STEP_PIN = 5;
+
 
 Parser parser;
 Control control;
@@ -19,19 +19,15 @@ void setup() {
 }
 
 void loop() {
-  /*
   while (Serial.available() > 0) {
     String buff = Serial.readString();
-    if (buff == "step\n") {
-      for (unsigned int i = 0; i < 100; i++) {
-        digitalWrite(STEP_PIN, HIGH);
-        delay(20);
-        digitalWrite(STEP_PIN, LOW);
-        delay(20);
-      }
+    if (buff == "exec\n") {
+      control.Execute();
       break;
     }
     CMD cmd = parser.Parse(buff);
+    control.Queue(cmd);
+    control.Dispatch();
     if (cmd.addr == '\0') {
       Serial.println("Invalid");
       continue;
@@ -44,7 +40,7 @@ void loop() {
       Serial.println(cmd.params[i].value);
     }
   }
-  */
+  /*
   CMD cmd('G', 0);
   cmd.params[2].Set(50.0);
   cmd.params[3].Set(10.0);
@@ -54,12 +50,8 @@ void loop() {
   digitalWrite(13, LOW);
   control.Dispatch(); 
   delay(5000);
-  for (unsigned int i = 0; i < 99; i++) {
-    digitalWrite(STEP_PIN, HIGH);
-    delay(20);
-    digitalWrite(STEP_PIN, LOW);
-    delay(20);
-  }
+  control.Execute();
   delay(5000);
+  */
   
 }

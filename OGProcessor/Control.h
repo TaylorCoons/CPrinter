@@ -21,6 +21,9 @@ class Control {
   QBuffer<CMD> cmds;
   INST xAxisInst;
   INST yAxisInst;
+  unsigned int flags;
+  unsigned int maxSteps;
+  const unsigned int STEP_PIN = 5;
   
   /* Methods */
   private:
@@ -38,6 +41,7 @@ class Control {
   Control();
   void Queue(CMD cmd);
   void Dispatch();
+  void Execute();
   ~Control();
 };
 

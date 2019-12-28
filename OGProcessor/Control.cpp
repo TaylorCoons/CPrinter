@@ -9,21 +9,30 @@ Control::Control() {
 void Control::Interpret(CMD cmd) {
   xAxisInst.Clear();
   yAxisInst.Clear();
+  flags = static_cast<unsigned int>(OPT_FLAG::NONE);
+  maxSteps = 0;
   if (cmd.addr == 'G') {
     switch(cmd.cmdNum) {
       case 0: // G0 and G1 are mostly the same
       case 1:
+        bool drive = false;
         if (cmd.params[2].set) {
           xAxisInst.opt = OPT::MOVE;
-          xAxisInst.flags = static_cast<unsigned int>(OPT_FLAG::NONE);
+          xAxisInst.flags = static_cast<unsigned int>(OPT_FLAG::DRIVE);
           xAxisInst.value = cmd.params[2].value;
+          drive = true;
         }
         if (cmd.params[3].set) {
           yAxisInst.opt = OPT::MOVE;
-          yAxisInst.flags = static_cast<unsigned int>(OPT_FLAG::NONE);
+          yAxisInst.flags = static_cast<unsigned int>(OPT_FLAG::DRIVE);
           yAxisInst.value = cmd.params[3].value;
+          drive = true;
         }
-        xAxisInst.steps = yAxisInst.steps = CalcMaxSteps(xAxisInst.value, yAxisInst.value, 0);
+        if (drive) {
+          flags = static_cast<unsigned int>(OPT_FLAG::DRIVE);
+          maxSteps = CalcMaxSteps(xAxisInst.value, yAxisInst.value, 0);
+          xAxisInst.steps = yAxisInst.steps = maxSteps;
+        }
       break;
     }
   }
@@ -78,6 +87,17 @@ void Control::Dispatch() {
   yAxisInst.Print("Y Axis");
   SendInst(Y_AXIS_ADDR, yAxisInst);
   SendInst(X_AXIS_ADDR, xAxisInst);
+}
+
+void Control::Execute() {
+  if (flags & OPT_FLAG::DRIVE) {
+    for (unsigned int i = 0; i < maxSteps; i++) {
+      digitalWrite(STEP_PIN, HIGH);
+      delay(25);
+      digitalWrite(STEP_PIN, LOW);
+      delay(25);
+    }
+  }
 }
 
 Control::~Control() {
