@@ -46,6 +46,9 @@ CMD Parser::Parse(String line) {
   }
   String token = TokenAt(0, line);
   char addr = token.charAt(0);
+  Serial.print("token: "); Serial.println(token);
+  Serial.print("substring: "); Serial.println(token.substring(1));
+  Serial.print("cmdNum: "); Serial.println(token.substring(1).toInt());
   unsigned int cmdNum = token.substring(1).toInt();
   CMD cmd(addr, cmdNum);
   for (unsigned int i = 1; i < tokenCount; i++) {

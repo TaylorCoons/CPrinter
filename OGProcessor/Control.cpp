@@ -4,6 +4,7 @@ Control::Control() {
   Wire.begin();
   // Slow the clock down for less noisy signal
   Wire.setClock(10000);
+  pinMode(STEP_PIN, OUTPUT);
 }
 
 void Control::Interpret(CMD cmd) {
@@ -11,11 +12,15 @@ void Control::Interpret(CMD cmd) {
   yAxisInst.Clear();
   flags = static_cast<unsigned int>(OPT_FLAG::NONE);
   maxSteps = 0;
+  bool drive = false;
+  Serial.print("cmd.addr: ");
+  Serial.println(cmd.addr);
+  Serial.print("cmd.cmdNum: ");
+  Serial.println(cmd.cmdNum);
   if (cmd.addr == 'G') {
     switch(cmd.cmdNum) {
-      case 0: // G0 and G1 are mostly the same
+      case 0:
       case 1:
-        bool drive = false;
         if (cmd.params[2].set) {
           xAxisInst.opt = OPT::MOVE;
           xAxisInst.flags = static_cast<unsigned int>(OPT_FLAG::DRIVE);
@@ -33,6 +38,13 @@ void Control::Interpret(CMD cmd) {
           maxSteps = CalcMaxSteps(xAxisInst.value, yAxisInst.value, 0);
           xAxisInst.steps = yAxisInst.steps = maxSteps;
         }
+      break;
+      case 28:
+        if (!cmd.flags[2].set && !cmd.flags[3].set && !cmd.flags[4].set) {
+          cmd.flags[2].set = cmd.flags[3].set = cmd.flags[4].set = true;
+        }
+        xAxisInst.opt = OPT::HOME;
+        yAxisInst.opt = OPT::HOME;
       break;
     }
   }
@@ -76,6 +88,10 @@ void Control::SendInst(uint8_t addr, INST inst) {
 }
 
 unsigned int Control::CalcMaxSteps(double xDist, double yDist, double zDist) {
+  // Take the absolute value since we only need magnitude
+  xDist = abs(xDist);
+  yDist = abs(yDist);
+  zDist = abs(zDist);
   // Ignore z since idc about it now
   unsigned int xSteps = xDist * X_AXIS_STEPS_PER_MM;
   unsigned int ySteps = yDist * Y_AXIS_STEPS_PER_MM;
@@ -95,9 +111,9 @@ void Control::Execute() {
   if (flags & OPT_FLAG::DRIVE) {
     for (unsigned int i = 0; i < maxSteps; i++) {
       digitalWrite(STEP_PIN, HIGH);
-      delay(25);
+      delay(1);
       digitalWrite(STEP_PIN, LOW);
-      delay(25);
+      delay(1);
     }
   }
 }

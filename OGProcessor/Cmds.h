@@ -56,6 +56,7 @@ struct CMD {
   }
   CMD(char addr, unsigned int cmdNum) {
     Clear();
+    this->cmdNum = cmdNum;
     if (addr == 'M') {
       this->addr = addr;
       switch(cmdNum) {
@@ -64,24 +65,33 @@ struct CMD {
     } else if (addr == 'G') {
       this->addr = addr;
       switch(cmdNum) {
-        case 0:
-          params[0].param = 'F';
-          params[1].param = 'E';
-          params[2].param = 'X';
-          params[3].param = 'Y';
-          params[4].param = 'Z';
+        case 0: // Linear move (Non-extrusion)
+          params[0].param = 'F'; // Maximum feedrate
+          params[1].param = 'E'; // Length of filament to feed between start and end
+          params[2].param = 'X'; // X coordinate
+          params[3].param = 'Y'; // Y coordinate
+          params[4].param = 'Z'; // Z coordinate
           numParams = 5;
           numFlags = 0;
           break;
-        case 1:
-          params[0].param = 'F';
-          params[1].param = 'E';
-          params[2].param = 'X';
-          params[3].param = 'Y';
-          params[4].param = 'Z';
+        case 1: // Linear move (Extrusion)
+          params[0].param = 'F'; // Maximum feedrate
+          params[1].param = 'E'; // Length of filament to feed between start and end
+          params[2].param = 'X'; // X coordinate
+          params[3].param = 'Y'; // Y coordinate
+          params[4].param = 'Z'; // Z coordinate
           numParams = 5;
           numFlags = 0;
           break;
+        case 28: // Auto home
+          flags[0].flag = 'O'; // Optional if position is known
+          flags[1].flag = 'R'; // Raise before homing distance
+          flags[2].flag = 'X'; // X axis
+          flags[3].flag = 'Y'; // Y axis
+          flags[4].flag = 'Z'; // Z axis
+          numParams = 0;
+          numFlags = 5;
+        break;
       }
     }
   }

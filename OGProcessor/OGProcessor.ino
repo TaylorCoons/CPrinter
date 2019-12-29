@@ -15,7 +15,6 @@ Control control;
 void setup() {
   Serial.begin(9600);
   pinMode(13, OUTPUT);
-  pinMode(5, OUTPUT);
 }
 
 void loop() {
@@ -39,6 +38,11 @@ void loop() {
       Serial.print((cmd.params[i].set ? "set" : "unset"));
       Serial.print(" : ");
       Serial.println(cmd.params[i].value);
+    }
+    for (unsigned int i = 0; i < cmd.numFlags; i++) {
+      Serial.print(cmd.flags[i].flag);
+      Serial.print(" : ");
+      Serial.println((cmd.flags[i].set ? "set" : "unset"));
     }
   }
   /*

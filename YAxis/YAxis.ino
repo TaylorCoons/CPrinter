@@ -55,7 +55,7 @@ void setup() {
   // Initialize the serial for debug
   Serial.begin(9600);
   // Initialize I2C to receive data from OGProcessor
-  Wire.begin(X_AXIS_ADDR);
+  Wire.begin(Y_AXIS_ADDR);
   // Set I2C callback
   Wire.onReceive(onRecv);
   // Attach interrupt on the step pin driven by OGProcessor
