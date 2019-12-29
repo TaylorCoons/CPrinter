@@ -158,17 +158,17 @@ void OnLimit() {
 // Home axis
 void Home() {
   // Set direction towards limit switch
-  Direction(true);
+  Direction(false);
   // Step towards limit until pressed
   while (!digitalRead(LIMIT_PIN)) {
-    delay(1);
+    delay(2);
     Step();
   }
   delay(250);
   // Backoff limit
-  Direction(false);
+  Direction(true);
   for (unsigned int i = 0; i < 5; i++) {
-    delay(1);
+    delay(2);
     Step();  
   }
   // Clear the inst once homed

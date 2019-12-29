@@ -161,14 +161,14 @@ void Home() {
   Direction(true);
   // Step towards limit until pressed
   while (!digitalRead(LIMIT_PIN)) {
-    delay(1);
+    delay(2);
     Step();
   }
   delay(250);
   // Backoff limit
   Direction(false);
   for (unsigned int i = 0; i < 5; i++) {
-    delay(1);
+    delay(2);
     Step();  
   }
   // Clear the inst once homed
@@ -199,10 +199,10 @@ void onRecv(int numBytes) {
     inst.steps = x;
     if (inst.opt == OPT::MOVE) {
       if (inst.value < 0) {
-        Direction(false);
+        Direction(true);
         inst.value = abs(inst.value);
       } else {
-        Direction(true);
+        Direction(false);
       }
     }
   }

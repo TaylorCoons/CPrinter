@@ -43,8 +43,8 @@ void Control::Interpret(CMD cmd) {
         if (!cmd.flags[2].set && !cmd.flags[3].set && !cmd.flags[4].set) {
           cmd.flags[2].set = cmd.flags[3].set = cmd.flags[4].set = true;
         }
-        xAxisInst.opt = OPT::HOME;
-        yAxisInst.opt = OPT::HOME;
+        xAxisInst.opt = (cmd.flags[2].set ? OPT::HOME : OPT::NOOP);
+        yAxisInst.opt = (cmd.flags[3].set ? OPT::HOME : OPT::NOOP);
       break;
     }
   }
