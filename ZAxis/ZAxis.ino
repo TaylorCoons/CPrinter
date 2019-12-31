@@ -55,7 +55,7 @@ void setup() {
   // Initialize the serial for debug
   Serial.begin(9600);
   // Initialize I2C to receive data from OGProcessor
-  Wire.begin(Y_AXIS_ADDR);
+  Wire.begin(Z_AXIS_ADDR);
   // Set I2C callback
   Wire.onReceive(onRecv);
   // Attach interrupt on the step pin driven by OGProcessor
@@ -116,7 +116,7 @@ void StepAction() {
   }
   
   // Do linear interpolation to determine wether to step or not
-  unsigned int totalSteps = inst.value * Y_AXIS_STEPS_PER_MM;
+  unsigned int totalSteps = inst.value * Z_AXIS_STEPS_PER_MM;
   unsigned int stepsRequired = map(stepIndex, 0, inst.steps, 0, totalSteps);
   if (debugPrint) {
     Serial.print("totalSteps: ");
@@ -158,7 +158,7 @@ void OnLimit() {
 // Home axis
 void Home() {
   // Set direction towards limit switch
-  Direction(true);
+  Direction(false);
   // Step towards limit until pressed
   while (!digitalRead(LIMIT_PIN)) {
     delay(2);
@@ -166,7 +166,7 @@ void Home() {
   }
   delay(250);
   // Backoff limit
-  Direction(false);
+  Direction(true);
   for (unsigned int i = 0; i < 5; i++) {
     delay(2);
     Step();  
@@ -199,10 +199,10 @@ void onRecv(int numBytes) {
     inst.steps = x;
     if (inst.opt == OPT::MOVE) {
       if (inst.value < 0) {
-        Direction(true);
+        Direction(false);
         inst.value = abs(inst.value);
       } else {
-        Direction(false);
+        Direction(true);
       }
     }
   }

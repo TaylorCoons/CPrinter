@@ -10,6 +10,7 @@ Control::Control() {
 void Control::Interpret(CMD cmd) {
   xAxisInst.Clear();
   yAxisInst.Clear();
+  zAxisInst.Clear();
   flags = static_cast<unsigned int>(OPT_FLAG::NONE);
   maxSteps = 0;
   bool drive = false;
@@ -33,10 +34,16 @@ void Control::Interpret(CMD cmd) {
           yAxisInst.value = cmd.params[3].value;
           drive = true;
         }
+        if (cmd.params[4].set) {
+          zAxisInst.opt = OPT::MOVE;
+          zAxisInst.flags = static_cast<unsigned int>(OPT_FLAG::DRIVE);
+          zAxisInst.value = cmd.params[4].value;
+          drive = true;
+        }
         if (drive) {
           flags = static_cast<unsigned int>(OPT_FLAG::DRIVE);
-          maxSteps = CalcMaxSteps(xAxisInst.value, yAxisInst.value, 0);
-          xAxisInst.steps = yAxisInst.steps = maxSteps;
+          maxSteps = CalcMaxSteps(xAxisInst.value, yAxisInst.value, zAxisInst.value);
+          xAxisInst.steps = yAxisInst.steps = zAxisInst.steps = maxSteps;
         }
       break;
       case 28:
@@ -45,6 +52,7 @@ void Control::Interpret(CMD cmd) {
         }
         xAxisInst.opt = (cmd.flags[2].set ? OPT::HOME : OPT::NOOP);
         yAxisInst.opt = (cmd.flags[3].set ? OPT::HOME : OPT::NOOP);
+        zAxisInst.opt = (cmd.flags[4].set ? OPT::HOME : OPT::NOOP);
       break;
     }
   }
@@ -95,7 +103,8 @@ unsigned int Control::CalcMaxSteps(double xDist, double yDist, double zDist) {
   // Ignore z since idc about it now
   unsigned int xSteps = xDist * X_AXIS_STEPS_PER_MM;
   unsigned int ySteps = yDist * Y_AXIS_STEPS_PER_MM;
-  return (xSteps > ySteps ? xSteps : ySteps);
+  unsigned int zSteps = zDist * Z_AXIS_STEPS_PER_MM;
+  return max(max(xSteps, ySteps), zSteps);
 }
 
 void Control::Dispatch() {
@@ -103,8 +112,10 @@ void Control::Dispatch() {
   Interpret(cmd);
   xAxisInst.Print("X Axis");
   yAxisInst.Print("Y Axis");
+  zAxisInst.Print("Z Axis");
   SendInst(Y_AXIS_ADDR, yAxisInst);
   SendInst(X_AXIS_ADDR, xAxisInst);
+  SendInst(Z_AXIS_ADDR, zAxisInst);
 }
 
 void Control::Execute() {

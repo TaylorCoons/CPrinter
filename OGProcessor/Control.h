@@ -21,6 +21,7 @@ class Control {
   QBuffer<CMD> cmds;
   INST xAxisInst;
   INST yAxisInst;
+  INST zAxisInst;
   unsigned int flags;
   unsigned int maxSteps;
   const unsigned int STEP_PIN = 5;
