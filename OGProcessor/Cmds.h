@@ -29,7 +29,8 @@ struct PARAM {
 
 struct CMD {
   char addr;
-  unsigned int cmdNum;
+  unsigned int num;
+  unsigned int subNum;
   static const unsigned int MAX_PARAMS = 26;
   PARAM params[MAX_PARAMS];
   
@@ -37,9 +38,9 @@ struct CMD {
     Clear();
   }
   
-  CMD(char addr, unsigned int cmdNum) {
+  CMD(char addr, unsigned int num, unsigned int subNum = 0) {
     Clear();
-    this->cmdNum = cmdNum;
+    this->num = num;
     this->addr = addr;
     for (unsigned int i = 0; i < MAX_PARAMS; i++) {
       params[i] = PARAM('A' + i);
@@ -54,7 +55,8 @@ struct CMD {
   }
   
   void Clear() {
-    cmdNum = 0;
+    num = 0;
+    subNum = 0;
     addr = '\0';
     for (unsigned int i = 0; i < MAX_PARAMS; i++) {
       params[i].Clear();

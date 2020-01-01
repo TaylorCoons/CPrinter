@@ -11,7 +11,7 @@ INSTSET Control::Interpret(CMD& cmd) {
   INSTSET instSet;
   switch (cmd.addr) {
     case 'G':
-      switch (cmd.cmdNum) {
+      switch (cmd.num) {
         case 0:
           instSet = G0(cmd);
         break;

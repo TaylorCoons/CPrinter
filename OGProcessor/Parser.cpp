@@ -40,32 +40,27 @@ String Parser::TokenAt(unsigned int index, String& line) {
 
 CMD Parser::Parse(String& line) {
   Format(&line);
-  Serial.print("Line: ");
-  Serial.println(line);
   unsigned int tokenCount = TokenCount(line);
-  Serial.print("Token count: ");
-  Serial.println(tokenCount);
   if (tokenCount == 0) {
     return CMD();
   }
   String token = TokenAt(0, line);
   char addr = token.charAt(0);
-  Serial.print("token: "); Serial.println(token);
-  Serial.print("substring: "); Serial.println(token.substring(1));
-  Serial.print("cmdNum: "); Serial.println(token.substring(1).toInt());
-  unsigned int cmdNum = token.substring(1).toInt();
-  CMD cmd(addr, cmdNum);
+  unsigned int num = 0;
+  unsigned int subNum = 0;
+  int dotIndex = token.indexOf('.');
+  if (dotIndex < 0) {
+    num = token.substring(1).toInt();
+  } else {
+    num = token.substring(1, dotIndex).toInt();
+    subNum = token.substring(dotIndex + 1).toInt();
+  }
+  CMD cmd(addr, num, subNum);
   for (unsigned int i = 1; i < tokenCount; i++) {
     token = TokenAt(i, line);
-    Serial.print("Parsing token: ");
-    Serial.println(token);
     char c = token.charAt(0);
-    Serial.print("First char: ");
-    Serial.println(c);
     PARAM* pParam = cmd.ParamAt(c);
     if (pParam != NULL) {
-      Serial.print("Valid parameter, value: ");
-      Serial.println(token.substring(1).toDouble());
       pParam->Set(token.substring(1).toDouble());
     }
   }
