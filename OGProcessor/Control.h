@@ -19,8 +19,6 @@ class Control {
   private:
   INSTSET instruction;
   //QBuffer<INSTSET> instructions;
-  unsigned int flags;
-  unsigned int maxSteps;
   const unsigned int STEP_PIN = 5;
   
   /* Methods */
@@ -31,7 +29,7 @@ class Control {
   void Write(unsigned long int x);
   void Write(double x);
 
-  void SendInst(uint8_t addr, INST inst);
+  void SendInst(uint8_t addr, const INST& inst);
 
   unsigned int CalcMaxSteps(double xDist, double yDist, double zDist);
   

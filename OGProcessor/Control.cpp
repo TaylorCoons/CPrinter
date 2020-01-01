@@ -52,7 +52,7 @@ void Control::Write(double x) {
   Write(y);
 }
 
-void Control::SendInst(uint8_t addr, INST inst) {
+void Control::SendInst(uint8_t addr, const INST& inst) {
   Wire.beginTransmission(addr);
   Write(static_cast<unsigned int>(inst.opt));
   Write(static_cast<unsigned int>(inst.flags));

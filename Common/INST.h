@@ -38,7 +38,7 @@ struct INST {
   }
 
   // Helper to print structure for debug
-  void Print(String instName) {
+  void Print(const String& instName) {
     Serial.print("<");
     Serial.print(instName);
     Serial.println(">");
