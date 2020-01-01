@@ -8,7 +8,7 @@ template<typename T>
 class QBuffer {
   /* Variables */
   private:
-  static const int QUEUE_SIZE = 10;
+  static const int QUEUE_SIZE = 1;
   T queue[QUEUE_SIZE];
   int queueIndex = -1;
   bool error;

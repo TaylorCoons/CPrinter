@@ -17,9 +17,9 @@ class Parser {
   
   void Format(String* line);
 
-  unsigned int TokenCount(String line);
+  unsigned int TokenCount(String& line);
   
-  String TokenAt(unsigned int index, String line);
+  String TokenAt(unsigned int index, String& line);
   
   public:
   

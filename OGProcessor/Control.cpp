@@ -7,66 +7,32 @@ Control::Control() {
   pinMode(STEP_PIN, OUTPUT);
 }
 
-void Control::Interpret(CMD cmd) {
-  xAxisInst.Clear();
-  yAxisInst.Clear();
-  zAxisInst.Clear();
-  flags = static_cast<unsigned int>(OPT_FLAG::NONE);
-  maxSteps = 0;
-  bool drive = false;
-  Serial.print("cmd.addr: ");
-  Serial.println(cmd.addr);
-  Serial.print("cmd.cmdNum: ");
-  Serial.println(cmd.cmdNum);
-  if (cmd.addr == 'G') {
-    switch(cmd.cmdNum) {
-      case 0:
-      case 1:
-        if (cmd.params[2].set) {
-          xAxisInst.opt = OPT::MOVE;
-          xAxisInst.flags = static_cast<unsigned int>(OPT_FLAG::DRIVE);
-          xAxisInst.value = cmd.params[2].value;
-          drive = true;
-        }
-        if (cmd.params[3].set) {
-          yAxisInst.opt = OPT::MOVE;
-          yAxisInst.flags = static_cast<unsigned int>(OPT_FLAG::DRIVE);
-          yAxisInst.value = cmd.params[3].value;
-          drive = true;
-        }
-        if (cmd.params[4].set) {
-          zAxisInst.opt = OPT::MOVE;
-          zAxisInst.flags = static_cast<unsigned int>(OPT_FLAG::DRIVE);
-          zAxisInst.value = cmd.params[4].value;
-          drive = true;
-        }
-        if (drive) {
-          flags = static_cast<unsigned int>(OPT_FLAG::DRIVE);
-          maxSteps = CalcMaxSteps(xAxisInst.value, yAxisInst.value, zAxisInst.value);
-          xAxisInst.steps = yAxisInst.steps = zAxisInst.steps = maxSteps;
-        }
-      break;
-      case 28:
-        if (!cmd.flags[2].set && !cmd.flags[3].set && !cmd.flags[4].set) {
-          cmd.flags[2].set = cmd.flags[3].set = cmd.flags[4].set = true;
-        }
-        xAxisInst.opt = (cmd.flags[2].set ? OPT::HOME : OPT::NOOP);
-        yAxisInst.opt = (cmd.flags[3].set ? OPT::HOME : OPT::NOOP);
-        zAxisInst.opt = (cmd.flags[4].set ? OPT::HOME : OPT::NOOP);
-      break;
-    }
+INSTSET Control::Interpret(CMD cmd) {
+  INSTSET instSet;
+  switch (cmd.addr) {
+    case 'G':
+      switch (cmd.cmdNum) {
+        case 0:
+          instSet = G0(cmd);
+        break;
+        case 1:
+          instSet = G1(cmd);
+        break;
+        case 28:
+          instSet = G28(cmd);
+        break;
+      }
+    break;
+    case 'M':
+
+    break;
   }
-  else if (cmd.addr == 'M') {
-    switch(cmd.cmdNum) {
-      
-    }
-  }
+  return instSet;
 }
 
 void Control::Queue(CMD cmd) {
-  cmds.Push(cmd);
-  Serial.print("Cmds Queued: ");
-  Serial.println(cmds.Size());
+  instruction = Interpret(cmd);
+  // instructions.Push(Interpret(cmd));
 }
 
 void Control::Write(unsigned int x) {
@@ -108,25 +74,71 @@ unsigned int Control::CalcMaxSteps(double xDist, double yDist, double zDist) {
 }
 
 void Control::Dispatch() {
-  CMD cmd = cmds.Pop();
-  Interpret(cmd);
-  xAxisInst.Print("X Axis");
-  yAxisInst.Print("Y Axis");
-  zAxisInst.Print("Z Axis");
-  SendInst(Y_AXIS_ADDR, yAxisInst);
-  SendInst(X_AXIS_ADDR, xAxisInst);
-  SendInst(Z_AXIS_ADDR, zAxisInst);
-}
-
-void Control::Execute() {
-  if (flags & OPT_FLAG::DRIVE) {
-    for (unsigned int i = 0; i < maxSteps; i++) {
-      digitalWrite(STEP_PIN, HIGH);
-      delay(1);
-      digitalWrite(STEP_PIN, LOW);
-      delay(1);
+  if (/*!instructions.Empty()*/ true) {
+    INSTSET instSet = instruction;
+    //INSTSET instSet = instructions.Pop();
+    instSet.xAxis.Print("X Axis");
+    instSet.yAxis.Print("Y Axis");
+    instSet.zAxis.Print("Z Axis");
+    SendInst(X_AXIS_ADDR, instSet.xAxis);
+    SendInst(Y_AXIS_ADDR, instSet.yAxis);
+    SendInst(Z_AXIS_ADDR, instSet.zAxis);
+    delay(1000);
+    if (instSet.flags & OPT_FLAG::DRIVE) {
+      for (unsigned int i = 0; i < instSet.maxSteps; i++) {
+        digitalWrite(STEP_PIN, HIGH);
+        delay(1);
+        digitalWrite(STEP_PIN, LOW);
+        delay(1);
+      }
     }
   }
+}
+
+INSTSET Control::G0(CMD cmd) {
+  INSTSET instSet = G1(cmd);
+  instSet.flags |= OPT_FLAG::RAPID;
+  return instSet;
+}
+
+INSTSET Control::G1(CMD cmd) {
+  INSTSET instSet;
+  instSet.Clear();
+  if (cmd.ParamAt('X')->set) {
+    instSet.xAxis.opt = OPT::MOVE;
+    instSet.xAxis.value = cmd.ParamAt('X')->value;
+    instSet.xAxis.steps = cmd.ParamAt('X')->value * X_AXIS_STEPS_PER_MM;
+    instSet.flags |= OPT_FLAG::DRIVE;
+  }
+  if (cmd.ParamAt('Y')->set) {
+    instSet.yAxis.opt = OPT::MOVE;
+    instSet.yAxis.value = cmd.ParamAt('Y')->value;
+    instSet.yAxis.steps = cmd.ParamAt('Y')->value * Y_AXIS_STEPS_PER_MM;
+    instSet.flags |= OPT_FLAG::DRIVE;
+  }
+  if (cmd.ParamAt('Z')->set) {
+    instSet.zAxis.opt = OPT::MOVE;
+    instSet.zAxis.value = cmd.ParamAt('Z')->value;
+    instSet.zAxis.steps = cmd.ParamAt('Z')->value * Z_AXIS_STEPS_PER_MM;
+    instSet.flags |= OPT_FLAG::DRIVE;
+  }
+  instSet.maxSteps = CalcMaxSteps(instSet.xAxis.steps, instSet.yAxis.steps, instSet.zAxis.steps);
+  return instSet;
+}
+
+INSTSET Control::G28(CMD cmd) {
+  INSTSET instSet;
+  instSet.Clear();
+  if (cmd.ParamAt('X')->set) {
+    instSet.xAxis.opt = OPT::HOME;
+  }
+  if (cmd.ParamAt('Y')->set) {
+    instSet.yAxis.opt = OPT::HOME;
+  }
+  if (cmd.ParamAt('Z')->set) {
+    instSet.zAxis.opt = OPT::HOME;
+  }
+  return instSet;
 }
 
 Control::~Control() {

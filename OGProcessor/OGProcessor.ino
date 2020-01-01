@@ -20,30 +20,19 @@ void setup() {
 void loop() {
   while (Serial.available() > 0) {
     String buff = Serial.readString();
+    Serial.print("Buffer: ");
+    Serial.println(buff);
     if (buff == "exec\n") {
       control.Dispatch();
-      delay(1000);
-      control.Execute();
       break;
     }
+    
     CMD cmd = parser.Parse(buff);
     if (cmd.addr == '\0') {
       Serial.println("Invalid");
       continue;
     }
     control.Queue(cmd);
-    for (unsigned int i = 0; i < cmd.numParams; i++) {
-      Serial.print(cmd.params[i].param);
-      Serial.print(" : ");
-      Serial.print((cmd.params[i].set ? "set" : "unset"));
-      Serial.print(" : ");
-      Serial.println(cmd.params[i].value);
-    }
-    for (unsigned int i = 0; i < cmd.numFlags; i++) {
-      Serial.print(cmd.flags[i].flag);
-      Serial.print(" : ");
-      Serial.println((cmd.flags[i].set ? "set" : "unset"));
-    }
   }
   /*
   CMD cmd('G', 0);

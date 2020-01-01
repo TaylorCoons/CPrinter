@@ -14,7 +14,8 @@ enum OPT {
 // Enum to define specified flags
 enum OPT_FLAG {
   NONE = 0, // No flags
-  DRIVE = 2 // Specifies the axis is to be driven by step signal
+  DRIVE = 2, // Specifies the axis is to be driven by step signal
+  RAPID = 4 // Non-Extrude rapid movement
 };
 
 // Structure to hold instruction packet to be sent from OGProcessor
@@ -59,6 +60,26 @@ struct INST {
     Serial.println(value);
     Serial.print("steps: ");
     Serial.println(steps);
+  }
+};
+
+struct INSTSET {
+  INST xAxis;
+  INST yAxis;
+  INST zAxis;
+  unsigned int maxSteps = 0;
+  unsigned int flags;
+  
+  INSTSET() {
+    Clear();
+  }
+  
+  void Clear() {
+    xAxis.Clear();
+    yAxis.Clear();
+    zAxis.Clear();
+    maxSteps = 0;
+    flags = 0;
   }
 };
 
