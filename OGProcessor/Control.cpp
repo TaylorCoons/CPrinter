@@ -7,7 +7,7 @@ Control::Control() {
   pinMode(STEP_PIN, OUTPUT);
 }
 
-INSTSET Control::Interpret(CMD cmd) {
+INSTSET Control::Interpret(CMD& cmd) {
   INSTSET instSet;
   switch (cmd.addr) {
     case 'G':
@@ -30,7 +30,7 @@ INSTSET Control::Interpret(CMD cmd) {
   return instSet;
 }
 
-void Control::Queue(CMD cmd) {
+void Control::Queue(CMD& cmd) {
   instruction = Interpret(cmd);
   // instructions.Push(Interpret(cmd));
 }
@@ -95,38 +95,36 @@ void Control::Dispatch() {
   }
 }
 
-INSTSET Control::G0(CMD cmd) {
+INSTSET Control::G0(CMD& cmd) {
   INSTSET instSet = G1(cmd);
   instSet.flags |= OPT_FLAG::RAPID;
   return instSet;
 }
 
-INSTSET Control::G1(CMD cmd) {
+INSTSET Control::G1(CMD& cmd) {
   INSTSET instSet;
   instSet.Clear();
   if (cmd.ParamAt('X')->set) {
     instSet.xAxis.opt = OPT::MOVE;
     instSet.xAxis.value = cmd.ParamAt('X')->value;
-    instSet.xAxis.steps = cmd.ParamAt('X')->value * X_AXIS_STEPS_PER_MM;
     instSet.flags |= OPT_FLAG::DRIVE;
   }
   if (cmd.ParamAt('Y')->set) {
     instSet.yAxis.opt = OPT::MOVE;
     instSet.yAxis.value = cmd.ParamAt('Y')->value;
-    instSet.yAxis.steps = cmd.ParamAt('Y')->value * Y_AXIS_STEPS_PER_MM;
     instSet.flags |= OPT_FLAG::DRIVE;
   }
   if (cmd.ParamAt('Z')->set) {
     instSet.zAxis.opt = OPT::MOVE;
     instSet.zAxis.value = cmd.ParamAt('Z')->value;
-    instSet.zAxis.steps = cmd.ParamAt('Z')->value * Z_AXIS_STEPS_PER_MM;
     instSet.flags |= OPT_FLAG::DRIVE;
   }
-  instSet.maxSteps = CalcMaxSteps(instSet.xAxis.steps, instSet.yAxis.steps, instSet.zAxis.steps);
+  instSet.maxSteps = CalcMaxSteps(instSet.xAxis.value, instSet.yAxis.value, instSet.zAxis.value);
+  instSet.xAxis.steps = instSet.yAxis.steps = instSet.zAxis.steps = instSet.maxSteps;
   return instSet;
 }
 
-INSTSET Control::G28(CMD cmd) {
+INSTSET Control::G28(CMD& cmd) {
   INSTSET instSet;
   instSet.Clear();
   if (cmd.ParamAt('X')->set) {
@@ -136,6 +134,11 @@ INSTSET Control::G28(CMD cmd) {
     instSet.yAxis.opt = OPT::HOME;
   }
   if (cmd.ParamAt('Z')->set) {
+    instSet.zAxis.opt = OPT::HOME;
+  }
+  if (!cmd.ParamAt('X')->set && !cmd.ParamAt('Y')->set && !cmd.ParamAt('Z')->set) {
+    instSet.xAxis.opt = OPT::HOME;
+    instSet.yAxis.opt = OPT::HOME;
     instSet.zAxis.opt = OPT::HOME;
   }
   return instSet;

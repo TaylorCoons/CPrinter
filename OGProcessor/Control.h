@@ -17,7 +17,6 @@ class Control {
 
   /* Variables */
   private:
-  CMD cmd;
   INSTSET instruction;
   //QBuffer<INSTSET> instructions;
   unsigned int flags;
@@ -26,7 +25,7 @@ class Control {
   
   /* Methods */
   private:
-  INSTSET Interpret(CMD cmd);
+  INSTSET Interpret(CMD& cmd);
 
   void Write(unsigned int x);
   void Write(unsigned long int x);
@@ -37,13 +36,13 @@ class Control {
   unsigned int CalcMaxSteps(double xDist, double yDist, double zDist);
   
   // All the GCode Ops
-  INSTSET G0(CMD cmd);
-  INSTSET G1(CMD cmd);
-  INSTSET G28(CMD cmd);
+  INSTSET G0(CMD& cmd);
+  INSTSET G1(CMD& cmd);
+  INSTSET G28(CMD& cmd);
     
   public:
   Control();
-  void Queue(CMD cmd);
+  void Queue(CMD& cmd);
   void Dispatch();
   ~Control();
 };

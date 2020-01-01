@@ -68,7 +68,7 @@ struct INSTSET {
   INST yAxis;
   INST zAxis;
   unsigned int maxSteps = 0;
-  unsigned int flags;
+  unsigned int flags = 0;
   
   INSTSET() {
     Clear();

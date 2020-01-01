@@ -38,7 +38,7 @@ String Parser::TokenAt(unsigned int index, String& line) {
   return line.substring(tokenStart, tokenEnd);
 }
 
-CMD Parser::Parse(String line) {
+CMD Parser::Parse(String& line) {
   Format(&line);
   Serial.print("Line: ");
   Serial.println(line);

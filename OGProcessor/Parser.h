@@ -25,7 +25,7 @@ class Parser {
   
   Parser();
   
-  CMD Parse(String line);
+  CMD Parse(String& line);
   
   ~Parser();
 };
