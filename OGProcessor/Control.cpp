@@ -73,6 +73,10 @@ unsigned int Control::CalcMaxSteps(double xDist, double yDist, double zDist) {
   return max(max(xSteps, ySteps), zSteps);
 }
 
+bool Control::PosKnown() {
+  return xKnown && yKnown && zKnown;
+}
+
 void Control::Dispatch() {
   if (/*!instructions.Empty()*/ true) {
     INSTSET instSet = instruction;
@@ -104,23 +108,35 @@ INSTSET Control::G0(CMD& cmd) {
 INSTSET Control::G1(CMD& cmd) {
   INSTSET instSet;
   instSet.Clear();
+  double xDist = 0;
+  double yDist = 0;
+  double zDist = 0;
+  if (!PosKnown()) {
+    return instSet;
+  }
   if (cmd.ParamAt('X')->set) {
     instSet.xAxis.opt = OPT::MOVE;
-    instSet.xAxis.value = cmd.ParamAt('X')->value;
+    xDist = cmd.ParamAt('X')->value - xPos;
+    instSet.xAxis.value = xDist;
     instSet.flags |= OPT_FLAG::DRIVE;
   }
   if (cmd.ParamAt('Y')->set) {
     instSet.yAxis.opt = OPT::MOVE;
-    instSet.yAxis.value = cmd.ParamAt('Y')->value;
+    yDist = cmd.ParamAt('Y')->value - yPos;
+    instSet.yAxis.value = yDist;
     instSet.flags |= OPT_FLAG::DRIVE;
   }
   if (cmd.ParamAt('Z')->set) {
     instSet.zAxis.opt = OPT::MOVE;
-    instSet.zAxis.value = cmd.ParamAt('Z')->value;
+    zDist = cmd.ParamAt('Z')->value - zPos;
+    instSet.zAxis.value = zDist;
     instSet.flags |= OPT_FLAG::DRIVE;
   }
-  instSet.maxSteps = CalcMaxSteps(instSet.xAxis.value, instSet.yAxis.value, instSet.zAxis.value);
+  instSet.maxSteps = CalcMaxSteps(xDist, yDist, zDist);
   instSet.xAxis.steps = instSet.yAxis.steps = instSet.zAxis.steps = instSet.maxSteps;
+  xPos = cmd.ParamAt('X')->value;
+  yPos = cmd.ParamAt('Y')->value;
+  zPos = cmd.ParamAt('Z')->value;
   return instSet;
 }
 
@@ -129,17 +145,25 @@ INSTSET Control::G28(CMD& cmd) {
   instSet.Clear();
   if (cmd.ParamAt('X')->set) {
     instSet.xAxis.opt = OPT::HOME;
+    xKnown = true;
+    xPos = 0.0;
   }
   if (cmd.ParamAt('Y')->set) {
     instSet.yAxis.opt = OPT::HOME;
+    yKnown = true;
+    yPos = 0.0;
   }
   if (cmd.ParamAt('Z')->set) {
     instSet.zAxis.opt = OPT::HOME;
+    zKnown = true;
+    zPos = 0.0;
   }
   if (!cmd.ParamAt('X')->set && !cmd.ParamAt('Y')->set && !cmd.ParamAt('Z')->set) {
     instSet.xAxis.opt = OPT::HOME;
     instSet.yAxis.opt = OPT::HOME;
     instSet.zAxis.opt = OPT::HOME;
+    xKnown = yKnown = zKnown = true;
+    xPos = yPos = zPos = 0.0;
   }
   return instSet;
 }
