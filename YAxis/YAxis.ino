@@ -20,8 +20,11 @@ void Step();
 // Set the direction of the stepper motor
 void Direction(bool);
 
-// Callback for I2C data
+// Callback for Recv I2C data
 void onRecv(int numBytes);
+
+// Callback for Req I2C data
+void onReq();
 
 // Drive stepper in time with OGProcessor
 void StepAction();
@@ -43,6 +46,8 @@ unsigned int stepIndex = 0;
 unsigned int stepCount = 0;
 // Limit flag
 bool limitPressed = false;
+// Blocking flag
+bool blocking = false;
 
 void setup() {
   // put your setup code here, to run once:
@@ -56,8 +61,10 @@ void setup() {
   Serial.begin(9600);
   // Initialize I2C to receive data from OGProcessor
   Wire.begin(Y_AXIS_ADDR);
-  // Set I2C callback
+  // Set Recieve I2C callback
   Wire.onReceive(onRecv);
+  // Set Request I2C callback
+  Wire.onRequest(onReq);
   // Attach interrupt on the step pin driven by OGProcessor
   attachInterrupt(digitalPinToInterrupt(DRIVER_PIN), StepAction, RISING);
   // Setup axis limit for pullup
@@ -157,8 +164,10 @@ void OnLimit() {
 
 // Home axis
 void Home() {
+  // Set blocking to true
+  blocking = true;
   // Set direction towards limit switch
-  Direction(true);
+  Direction(false);
   // Step towards limit until pressed
   while (!digitalRead(LIMIT_PIN)) {
     delay(2);
@@ -166,13 +175,15 @@ void Home() {
   }
   delay(250);
   // Backoff limit
-  Direction(false);
+  Direction(true);
   for (unsigned int i = 0; i < 5; i++) {
     delay(2);
     Step();  
   }
   // Clear the inst once homed
   inst.Clear();
+  // Unblock axis
+  blocking = false;
 }
 
 // Callback for I2C data
@@ -199,11 +210,20 @@ void onRecv(int numBytes) {
     inst.steps = x;
     if (inst.opt == OPT::MOVE) {
       if (inst.value < 0) {
-        Direction(true);
+        Direction(false);
         inst.value = abs(inst.value);
       } else {
-        Direction(false);
+        Direction(true);
       }
     }
+  }
+}
+
+// Callback for Req I2C data
+void onReq() {
+  if (blocking) {
+    Wire.write(0x01);
+  } else {
+    Wire.write(0x00);
   }
 }

@@ -33,5 +33,4 @@ void loop() {
     control.Queue(cmd);
     Serial.println("Loaded command");
   }
-
 }

@@ -77,6 +77,21 @@ bool Control::PosKnown() {
   return xKnown && yKnown && zKnown;
 }
 
+void Control::BlockOnAxis(unsigned int axisAddr, unsigned int pollTime) {
+  bool blocking = true;
+  while (blocking) {
+    Wire.requestFrom(axisAddr, 1);
+    while (Wire.available()) {
+      byte c = Wire.read();
+      Serial.print(c);
+      if (c == 0x00) {
+        blocking = false;
+      }
+    }
+    delay(pollTime);
+  }
+}
+
 void Control::Dispatch() {
   if (/*!instructions.Empty()*/ true) {
     INSTSET instSet = instruction;
@@ -95,6 +110,15 @@ void Control::Dispatch() {
         digitalWrite(STEP_PIN, LOW);
         delay(1);
       }
+    }
+    if (instSet.xAxis.flags & OPT_FLAG::BLOCK) {
+      BlockOnAxis(X_AXIS_ADDR);
+    }
+    if (instSet.yAxis.flags & OPT_FLAG::BLOCK) {
+      BlockOnAxis(Y_AXIS_ADDR);
+    }
+    if (instSet.zAxis.flags & OPT_FLAG::BLOCK) {
+      BlockOnAxis(Z_AXIS_ADDR);
     }
   }
 }
@@ -143,27 +167,26 @@ INSTSET Control::G1(CMD& cmd) {
 INSTSET Control::G28(CMD& cmd) {
   INSTSET instSet;
   instSet.Clear();
+  if (!cmd.ParamAt('X')->set && !cmd.ParamAt('Y')->set && !cmd.ParamAt('Z')->set) {
+    cmd.ParamAt('X')->set = cmd.ParamAt('Y')->set = cmd.ParamAt('Z')->set = true;
+  }
   if (cmd.ParamAt('X')->set) {
     instSet.xAxis.opt = OPT::HOME;
+    instSet.xAxis.flags |= OPT_FLAG::BLOCK;
     xKnown = true;
     xPos = 0.0;
   }
   if (cmd.ParamAt('Y')->set) {
     instSet.yAxis.opt = OPT::HOME;
+    instSet.yAxis.flags |= OPT_FLAG::BLOCK;
     yKnown = true;
     yPos = 0.0;
   }
   if (cmd.ParamAt('Z')->set) {
     instSet.zAxis.opt = OPT::HOME;
+    instSet.zAxis.flags |= OPT_FLAG::BLOCK;
     zKnown = true;
     zPos = 0.0;
-  }
-  if (!cmd.ParamAt('X')->set && !cmd.ParamAt('Y')->set && !cmd.ParamAt('Z')->set) {
-    instSet.xAxis.opt = OPT::HOME;
-    instSet.yAxis.opt = OPT::HOME;
-    instSet.zAxis.opt = OPT::HOME;
-    xKnown = yKnown = zKnown = true;
-    xPos = yPos = zPos = 0.0;
   }
   return instSet;
 }

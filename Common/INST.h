@@ -15,7 +15,8 @@ enum OPT {
 enum OPT_FLAG {
   NONE = 0, // No flags
   DRIVE = 2, // Specifies the axis is to be driven by step signal
-  RAPID = 4 // Non-Extrude rapid movement
+  BLOCK = 4, // Specified command requires OG Processor to block on status of completion 
+  RAPID = 8, // Non-Extrude rapid movement
 };
 
 // Structure to hold instruction packet to be sent from OGProcessor

@@ -40,6 +40,8 @@ class Control {
   unsigned int CalcMaxSteps(double xDist, double yDist, double zDist);
 
   bool PosKnown();
+
+  void BlockOnAxis(unsigned int axisAddr, unsigned int pollTime = 200);
   
   // All the GCode Ops
   INSTSET G0(CMD& cmd);
